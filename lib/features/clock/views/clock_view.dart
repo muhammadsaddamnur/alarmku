@@ -1,15 +1,19 @@
 import 'dart:async';
+import 'dart:isolate';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:alarmku/cores/core_services/servcie_debounce.dart';
 import 'package:alarmku/cores/core_services/service_local_notification.dart';
 import 'package:alarmku/cores/core_widgets/widget_anim_switcher.dart';
 import 'package:alarmku/cores/core_widgets/widget_clock.dart';
 import 'package:alarmku/features/clock/controller/clock_controller.dart';
+import 'package:alarmku/main.dart';
 import 'package:android_alarm_manager/android_alarm_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:ringtone_player/ringtone_player.dart';
 
 class ClockView extends StatefulWidget {
   const ClockView({Key? key}) : super(key: key);
@@ -19,8 +23,28 @@ class ClockView extends StatefulWidget {
 }
 
 class _ClockViewState extends State<ClockView> {
-  void fireAlarm() {
-    print('Alarm Fired at ${DateTime.now()}');
+  static SendPort? uiSendPort;
+
+  static Future<void> callback() async {
+    print('Alarm fired!');
+    RingtonePlayer.play(
+      alarmMeta: AlarmMeta(
+        'com.example.alarmku.MainActivity',
+        'ic_launcher',
+        contentTitle: 'Alarm',
+        contentText: 'Alarm is active',
+        subText: 'Subtext',
+      ),
+      android: Android.alarm,
+      ios: Ios.electronic,
+      loop: true, // Android only - API >= 28
+      volume: 0.1, // Android only - API >= 28
+      alarm: true, // Android only - all APIs
+    );
+
+    // This will be null if we're running in the background.
+    uiSendPort ??= IsolateNameServer.lookupPortByName(isolateName);
+    uiSendPort?.send(null);
   }
 
   int alarmId = 1;
@@ -176,19 +200,68 @@ class _ClockViewState extends State<ClockView> {
                     ),
                     ElevatedButton(
                         child: const Text(
-                          'data',
+                          'Alarm Manager',
                           style: TextStyle(color: Colors.white),
                         ),
                         onPressed: () async {
-                          AndroidAlarmManager.periodic(
-                              Duration(seconds: 4), alarmId, fireAlarm);
+                          await AndroidAlarmManager.periodic(
+                            const Duration(seconds: 5),
+                            // Ensure we have a unique alarm ID.
+
+                            Random().nextInt(pow(2, 31).toInt()),
+                            callback,
+                            startAt:
+                                DateTime.now().add(const Duration(seconds: 5)),
+                            exact: true,
+                            wakeup: true,
+                          );
+                          // AndroidAlarmManager.periodic(
+                          //     Duration(seconds: 4), alarmId, fireAlarm);
                           // ServiceLocalNotification().pushSchedule(
                           //     id: 1,
                           //     dateTime:
                           //         DateTime.now().add(Duration(seconds: 5)));
                         }),
                   ],
-                )
+                ),
+                ElevatedButton(
+                    child: const Text(
+                      'data',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    onPressed: () async {
+                      // RingtonePlayer.stop();
+
+                      RingtonePlayer.play(
+                        alarmMeta: AlarmMeta(
+                          'com.example.alarmku.MainActivity',
+                          'ic_alarm_notification',
+                          contentTitle: 'Alarm',
+                          contentText: 'Alarm is active',
+                          subText: 'Subtext',
+                        ),
+                        android: Android.ringtone,
+                        ios: Ios.electronic,
+                        loop: true, // Android only - API >= 28
+                        volume: 0.1, // Android only - API >= 28
+                        alarm: true, // Android only - all APIs
+                      );
+
+                      // RingtonePlayer.play(
+                      //   android: Android.ringtone,
+                      //   ios: Ios.electronic,
+                      //   loop: true,
+                      //   volume: 1.0,
+                      // );
+                    }),
+                ElevatedButton(
+                    child: const Text(
+                      'data',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    onPressed: () async {
+                      RingtonePlayer.stop();
+                    }),
               ],
             ),
           ),
