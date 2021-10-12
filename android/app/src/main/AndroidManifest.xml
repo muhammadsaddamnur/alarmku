@@ -10,6 +10,11 @@
         android:name = "io.flutter.app.FlutterApplication"
         android:label="alarmku"
         android:icon="@mipmap/ic_launcher">
+         <service   android:name="me.carda.awesome_notifications.services.ForegroundService"
+            android:enabled="true"            
+            android:exported="false"
+            android:stopWithTask="true"
+            android:foregroundServiceType="microphone|mediaPlayback|phoneCall"/>
         <service android:name="dev.cruv.ringtone_player.PlayerService" />
         <service
             android:name="dev.fluttercommunity.plus.androidalarmmanager.AlarmService"

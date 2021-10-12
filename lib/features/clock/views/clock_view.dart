@@ -10,6 +10,7 @@ import 'package:alarmku/cores/core_widgets/widget_clock.dart';
 import 'package:alarmku/features/clock/controller/clock_controller.dart';
 import 'package:alarmku/main.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -233,6 +234,33 @@ class _ClockViewState extends State<ClockView> {
                     onPressed: () async {
                       await AndroidAlarmManager.cancel(1);
                       RingtonePlayer.stop();
+                    }),
+                ElevatedButton(
+                    child: const Text(
+                      'awe',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    onPressed: () async {
+                      AwesomeNotifications()
+                          .isNotificationAllowed()
+                          .then((isAllowed) {
+                        if (!isAllowed) {
+                          // Insert here your friendly dialog box before call the request method
+                          // This is very important to not harm the user experience
+                          AwesomeNotifications()
+                              .requestPermissionToSendNotifications();
+                        } else {
+                          AwesomeNotifications().createNotification(
+                              content: NotificationContent(
+                                  id: 10,
+                                  channelKey: 'basic_channel',
+                                  title: 'Simple Notification',
+                                  body: 'Simple body'),
+                              actionButtons: [
+                                NotificationActionButton(key: '1', label: 'Oke')
+                              ]);
+                        }
+                      });
                     }),
               ],
             ),
