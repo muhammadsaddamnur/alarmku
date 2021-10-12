@@ -17,20 +17,21 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
+        android:name="io.flutter.app.FlutterApplication"
         android:appComponentFactory="androidx.core.app.CoreComponentFactory"
         android:icon="@mipmap/ic_launcher"
         android:label="alarmku" >
         <service android:name="dev.cruv.ringtone_player.PlayerService" />
         <service
-            android:name="io.flutter.plugins.androidalarmmanager.AlarmService"
+            android:name="dev.fluttercommunity.plus.androidalarmmanager.AlarmService"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <receiver
-            android:name="io.flutter.plugins.androidalarmmanager.AlarmBroadcastReceiver"
+            android:name="dev.fluttercommunity.plus.androidalarmmanager.AlarmBroadcastReceiver"
             android:exported="false" />
         <receiver
-            android:name="io.flutter.plugins.androidalarmmanager.RebootBroadcastReceiver"
+            android:name="dev.fluttercommunity.plus.androidalarmmanager.RebootBroadcastReceiver"
             android:enabled="false" >
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

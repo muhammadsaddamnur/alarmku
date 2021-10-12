@@ -9,7 +9,7 @@ import 'package:alarmku/cores/core_widgets/widget_anim_switcher.dart';
 import 'package:alarmku/cores/core_widgets/widget_clock.dart';
 import 'package:alarmku/features/clock/controller/clock_controller.dart';
 import 'package:alarmku/main.dart';
-import 'package:android_alarm_manager/android_alarm_manager.dart';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -38,7 +38,7 @@ class _ClockViewState extends State<ClockView> {
       android: Android.alarm,
       ios: Ios.electronic,
       loop: true, // Android only - API >= 28
-      volume: 0.1, // Android only - API >= 28
+      volume: 0.5, // Android only - API >= 28
       alarm: true, // Android only - all APIs
     );
 
@@ -52,7 +52,7 @@ class _ClockViewState extends State<ClockView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
+      body: SingleChildScrollView(
         child: Center(
           child: Obx(
             () => Column(
@@ -204,17 +204,18 @@ class _ClockViewState extends State<ClockView> {
                           style: TextStyle(color: Colors.white),
                         ),
                         onPressed: () async {
-                          await AndroidAlarmManager.periodic(
-                            const Duration(seconds: 5),
-                            // Ensure we have a unique alarm ID.
+                          clockController.alarmManager();
+                          // await AndroidAlarmManager.periodic(
+                          //   const Duration(seconds: 5),
+                          //   // Ensure we have a unique alarm ID.
 
-                            Random().nextInt(pow(2, 31).toInt()),
-                            callback,
-                            startAt:
-                                DateTime.now().add(const Duration(seconds: 5)),
-                            exact: true,
-                            wakeup: true,
-                          );
+                          //   1,
+                          //   callback,
+                          //   startAt:
+                          //       DateTime.now().add(const Duration(seconds: 5)),
+                          //   exact: true,
+                          //   wakeup: true,
+                          // );
                           // AndroidAlarmManager.periodic(
                           //     Duration(seconds: 4), alarmId, fireAlarm);
                           // ServiceLocalNotification().pushSchedule(
@@ -226,40 +227,11 @@ class _ClockViewState extends State<ClockView> {
                 ),
                 ElevatedButton(
                     child: const Text(
-                      'data',
+                      'cancel',
                       style: TextStyle(color: Colors.white),
                     ),
                     onPressed: () async {
-                      // RingtonePlayer.stop();
-
-                      RingtonePlayer.play(
-                        alarmMeta: AlarmMeta(
-                          'com.example.alarmku.MainActivity',
-                          'ic_alarm_notification',
-                          contentTitle: 'Alarm',
-                          contentText: 'Alarm is active',
-                          subText: 'Subtext',
-                        ),
-                        android: Android.ringtone,
-                        ios: Ios.electronic,
-                        loop: true, // Android only - API >= 28
-                        volume: 0.1, // Android only - API >= 28
-                        alarm: true, // Android only - all APIs
-                      );
-
-                      // RingtonePlayer.play(
-                      //   android: Android.ringtone,
-                      //   ios: Ios.electronic,
-                      //   loop: true,
-                      //   volume: 1.0,
-                      // );
-                    }),
-                ElevatedButton(
-                    child: const Text(
-                      'data',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    onPressed: () async {
+                      await AndroidAlarmManager.cancel(1);
                       RingtonePlayer.stop();
                     }),
               ],

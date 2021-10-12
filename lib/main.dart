@@ -3,7 +3,7 @@ import 'dart:ui';
 
 import 'package:alarmku/cores/core_configs/config_theme.dart';
 import 'package:alarmku/features/clock/views/clock_view.dart';
-import 'package:android_alarm_manager/android_alarm_manager.dart';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:timezone/data/latest.dart' as tz;

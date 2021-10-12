@@ -3,9 +3,10 @@
 -keep class com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver { <init>(); }
 -keep class com.example.alarmku.MainActivity { <init>(); }
 -keep class dev.cruv.ringtone_player.PlayerService { <init>(); }
--keep class io.flutter.plugins.androidalarmmanager.AlarmBroadcastReceiver { <init>(); }
--keep class io.flutter.plugins.androidalarmmanager.AlarmService { <init>(); }
--keep class io.flutter.plugins.androidalarmmanager.RebootBroadcastReceiver { <init>(); }
+-keep class dev.fluttercommunity.plus.androidalarmmanager.AlarmBroadcastReceiver { <init>(); }
+-keep class dev.fluttercommunity.plus.androidalarmmanager.AlarmService { <init>(); }
+-keep class dev.fluttercommunity.plus.androidalarmmanager.RebootBroadcastReceiver { <init>(); }
+-keep class io.flutter.app.FlutterApplication { <init>(); }
 -keep class android.widget.Space { <init>(android.content.Context, android.util.AttributeSet); }
 
 -keep class androidx.appcompat.app.AlertController$RecycleListView { <init>(android.content.Context, android.util.AttributeSet); }
