@@ -8,16 +8,16 @@ class ConfigTheme {
       primaryColor: const Color(0xff00AA13),
       colorScheme: const ColorScheme(
           primary: Color(0xFF00AB6B),
-          primaryVariant: Color(0xFF00AB6B),
+          primaryVariant: Color(0xFF07e391),
           secondary: Color(0xFFD2F3E6),
           secondaryVariant: Color(0xFFD2F3E6),
           surface: Color(0xFFD2F3E6),
           background: Colors.white,
           error: Colors.red,
-          onPrimary: Color(0xFF00AB6B),
-          onSecondary: Color(0xFFD2F3E6),
-          onSurface: Color(0xFFD2F3E6),
+          onPrimary: Colors.white,
+          onSecondary: Colors.white,
+          onSurface: Colors.white,
           onBackground: Colors.white,
-          onError: Colors.red,
+          onError: Colors.white,
           brightness: Brightness.light));
 }

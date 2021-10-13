@@ -1,102 +1,138 @@
 import 'dart:async';
-import 'dart:developer';
-import 'dart:isolate';
-import 'dart:ui';
 
 import 'package:alarmku/cores/core_services/servcie_debounce.dart';
-import 'package:alarmku/main.dart';
-import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:ringtone_player/ringtone_player.dart';
+import 'package:intl/intl.dart';
 
-class ClockController extends GetxController {
+abstract class ClockControllerAbstract {
+  void initTimer();
+  void cancelTimer();
+  void horizontalDrag(DragUpdateDetails value);
+  void verticalDrag(DragUpdateDetails value);
+
+  String getDateTimeNow();
+}
+
+class ClockController extends GetxController
+    implements ClockControllerAbstract {
+  ///timer clock
+  ///
   Rx<Timer> timer = Timer(const Duration(seconds: 0), () {}).obs;
+
+  ///alarm timer clock
+  ///
+  Rx<Timer> alarmTimer = Timer(const Duration(seconds: 0), () {}).obs;
+
+  ///datetime now
+  ///
   Rx<DateTime> dateTime = DateTime.now().obs;
 
-  Rx<FixedExtentScrollController> hourController =
-      FixedExtentScrollController(initialItem: 0).obs;
+  ///alarm datetime
+  ///
+  Rx<DateTime> alarmDateTime = DateTime.now().obs;
 
+  ///add/edit alarm
+  ///
+  RxBool isEdit = false.obs;
+
+  ///init state
+  ///
   @override
   void onInit() {
     timer.value = Timer.periodic(const Duration(seconds: 1), (timer) {
       dateTime.value = DateTime.now();
     });
+
+    ///init alarm timer
+    ///
+    initTimer();
+
     super.onInit();
-    port.listen((_) async => await _incrementCounter());
+  }
 
-    AwesomeNotifications().actionStream.listen((receivedNotification) {
-      RingtonePlayer.stop();
-      if (receivedNotification.buttonKeyPressed == '1') {
-        print('wkwkwk');
-      }
-      Get.toNamed('/');
+  ///dispose state
+  ///
+  @override
+  void dispose() {
+    timer.value.cancel();
+    alarmTimer.value.cancel();
+    super.dispose();
+  }
+
+  ///init alarm timer
+  ///
+  @override
+  void initTimer() {
+    alarmTimer.value = Timer.periodic(const Duration(seconds: 1), (timer) {
+      alarmDateTime.value = DateTime.now();
     });
   }
 
-  Future<void> _incrementCounter() async {
-    log('Increment counter!');
+  ///cancel alarm timer
+  ///
+  @override
+  void cancelTimer() {
+    if (alarmTimer.value.isActive) {
+      alarmTimer.value.cancel();
+    }
   }
 
-  static SendPort? uiSendPort;
+  ///get realtime datetime
+  ///
+  @override
+  String getDateTimeNow() {
+    return DateFormat('HH:mm:ss').format(dateTime.value).toString();
+  }
 
-  static Future<void> callback() async {
-    print('Alarm fired!');
+  ///horizontal drag on clock
+  ///
+  @override
+  void horizontalDrag(DragUpdateDetails value) {
+    cancelTimer();
+    print('horizontal :' + value.toString());
+    if (value.delta.dx != 0.0) {
+      debugPrint(value.delta.dx.toString());
 
-    RingtonePlayer.play(
-      android: Android.alarm,
-      ios: Ios.electronic,
-      volume: 0.5,
-    );
-
-    AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
-      if (!isAllowed) {
-        // Insert here your friendly dialog box before call the request method
-        // This is very important to not harm the user experience
-        AwesomeNotifications().requestPermissionToSendNotifications();
+      if (value.delta.dx > 0) {
+        ServiceDebounce.call(
+            function: () async {
+              alarmDateTime.value =
+                  alarmDateTime.value.add(const Duration(minutes: 1));
+            },
+            duration: const Duration(milliseconds: 10));
       } else {
-        AwesomeNotifications().createNotification(
-            content: NotificationContent(
-                id: 10,
-                channelKey: 'basic_channel',
-                title: 'Simple Notification',
-                body: 'Simple body'),
-            actionButtons: [NotificationActionButton(key: '1', label: 'Oke')]);
+        ServiceDebounce.call(
+            function: () async {
+              alarmDateTime.value =
+                  alarmDateTime.value.subtract(const Duration(minutes: 1));
+            },
+            duration: const Duration(milliseconds: 10));
       }
-    });
-
-    // RingtonePlayer.play(
-    //   // alarmMeta: AlarmMeta(
-    //   //   'com.example.alarmku.MainActivity',
-    //   //   'ic_launcher',
-    //   //   contentTitle: 'Alarm',
-    //   //   contentText: 'Alarm is active',
-    //   //   subText: 'Subtext',
-    //   // ),
-    //   android: Android.alarm,
-    //   ios: Ios.electronic,
-    //   loop: true, // Android only - API >= 28
-    //   volume: 0.5, // Android only - API >= 28
-    //   alarm: true, // Android only - all APIs
-    // );
-
-    // This will be null if we're running in the background.
-    uiSendPort ??= IsolateNameServer.lookupPortByName(isolateName);
-    uiSendPort?.send(null);
+    }
   }
 
-  int alarmId = 1;
-  alarmManager() async {
-    await AndroidAlarmManager.periodic(
-      const Duration(seconds: 5),
-      // Ensure we have a unique alarm ID.
+  ///vertical drag on clock
+  ///
+  @override
+  void verticalDrag(DragUpdateDetails value) {
+    cancelTimer();
+    print('vertical :' + value.toString());
 
-      1,
-      callback,
-      startAt: DateTime.now().add(const Duration(seconds: 5)),
-      exact: true,
-      wakeup: true,
-    );
+    if (value.delta.dy != 0.0) {
+      debugPrint(value.delta.dy.toString());
+
+      if (value.delta.dy > 0) {
+        ServiceDebounce.call(function: () async {
+          alarmDateTime.value =
+              alarmDateTime.value.add(const Duration(hours: 1));
+        });
+      } else {
+        ServiceDebounce.call(function: () async {
+          alarmDateTime.value =
+              alarmDateTime.value.subtract(const Duration(hours: 1));
+        });
+      }
+    }
   }
 }
