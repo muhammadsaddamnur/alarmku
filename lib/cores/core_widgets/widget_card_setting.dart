@@ -4,7 +4,8 @@ import 'package:intl/intl.dart';
 
 class CardOptions {
   DateTime dateTime;
-  CardOptions({required this.dateTime});
+  void Function()? onTapSave;
+  CardOptions({required this.dateTime, required this.onTapSave});
 }
 
 class WidgetCardSetting extends StatelessWidget {
@@ -128,7 +129,7 @@ class WidgetCardSetting extends StatelessWidget {
                     child: ElevatedButton(
                         style: ButtonStyle(
                             elevation: MaterialStateProperty.all(0)),
-                        onPressed: () {},
+                        onPressed: cardOptions.onTapSave,
                         child: Text('Simpan')),
                   ),
                 ],

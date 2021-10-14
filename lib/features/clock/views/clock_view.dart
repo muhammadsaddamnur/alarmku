@@ -133,10 +133,15 @@ class _ClockViewState extends State<ClockView> {
             ),
             SliverToBoxAdapter(
               child: Obx(() {
+                return Text('${clockController.alarmDateTime.value}');
+              }),
+            ),
+            SliverToBoxAdapter(
+              child: Obx(() {
                 Duration dif = clockController.dateTime.value
                     .difference(clockController.alarmDateTime.value);
-                return Text('${dif.inHours > 0 ? '0' : dif.inHours * -1} jam '
-                    '${dif.inMinutes > 0 ? '0' : dif.inMinutes * -1} menit');
+                return Text('${dif.inHours} jam '
+                    '${dif.inMinutes} menit');
               }),
             ),
             SliverToBoxAdapter(
@@ -144,7 +149,10 @@ class _ClockViewState extends State<ClockView> {
                     expand: clockController.isEdit.value,
                     child: WidgetCardSetting(
                       cardOptions: CardOptions(
-                          dateTime: clockController.alarmDateTime.value),
+                          dateTime: clockController.alarmDateTime.value,
+                          onTapSave: () {
+                            clockController.createAlarm();
+                          }),
                     ))),
             SliverToBoxAdapter(
               child: Center(
