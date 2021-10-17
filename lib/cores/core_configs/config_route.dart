@@ -1,5 +1,4 @@
 import 'package:alarmku/features/clock/views/clock_view.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class ConfigRoute {
@@ -13,7 +12,7 @@ class ConfigRoute {
     return [
       GetPage(
         name: '/',
-        page: () => ClockView(),
+        page: () => const ClockView(),
       ),
     ];
   }

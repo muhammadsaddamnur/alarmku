@@ -3,9 +3,11 @@ import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:alarmku/cores/core_services/servcie_debounce.dart';
+import 'package:alarmku/cores/core_services/service_local_storage.dart';
 import 'package:alarmku/main.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -17,8 +19,15 @@ abstract class ClockControllerAbstract {
   void horizontalDrag(DragUpdateDetails value);
   void verticalDrag(DragUpdateDetails value);
   void createAlarm();
+  void removeAlarm();
+  void saveCurrentAlarm(
+      String? title, String? subtitle, Duration? duration, DateTime? schedule);
+  void getDataAlarm();
+  void saveDataAlarm(DateTime? datetime);
 
   String getDateTimeNow();
+  Future<String> getCurrentAlarm();
+  Widget viewGraph();
 }
 
 class ClockController extends GetxController
@@ -47,10 +56,18 @@ class ClockController extends GetxController
   ///
   RxBool isEdit = false.obs;
 
+  ///current alarm value
+  ///
+  RxString currentAlarmValue = ''.obs;
+
+  RxList<BarChartGroupData> dataAlarm = <BarChartGroupData>[].obs;
+
   ///init state
   ///
   @override
-  void onInit() {
+  void onInit() async {
+    currentAlarmValue.value = await getCurrentAlarm();
+
     timer.value = Timer.periodic(const Duration(seconds: 1), (timer) {
       dateTime.value = DateTime.now();
     });
@@ -59,17 +76,27 @@ class ClockController extends GetxController
     ///
     initTimer();
 
-    port.listen((_) async => print('oke'));
+    port.listen((_) async => debugPrint('oke'));
+
+    AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
+      if (isAllowed == false) {
+        AwesomeNotifications().requestPermissionToSendNotifications();
+      }
+    });
 
     ///notification listener
     ///
-    AwesomeNotifications().actionStream.listen((receivedNotification) {
-      RingtonePlayer.stop();
-      if (receivedNotification.buttonKeyPressed == '1') {
-        print('wkwkwk');
+    AwesomeNotifications().actionStream.listen((receivedNotification) async {
+      List result = await ServiceLocalStorage().getDataAlarm();
+
+      if (result.length % 2 == 1) {
+        DateTime v = DateTime.now();
+        saveDataAlarm(v);
       }
-      Get.toNamed('/');
+      getDataAlarm();
     });
+
+    getDataAlarm();
 
     super.onInit();
   }
@@ -108,14 +135,84 @@ class ClockController extends GetxController
     return DateFormat('HH:mm:ss').format(dateTime.value).toString();
   }
 
+  ///save current alarm
+  ///
+  @override
+  void saveCurrentAlarm(String? title, String? subtitle, Duration? duration,
+      DateTime? schedule) async {
+    try {
+      await ServiceLocalStorage().saveAlarm({
+        'datetime': schedule.toString(),
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  ///get current alarm
+  ///
+  @override
+  Future<String> getCurrentAlarm() async {
+    List result = await ServiceLocalStorage().getAlarm();
+    return result.isEmpty
+        ? ''
+        : DateFormat('HH:mm')
+            .format(DateTime.parse(result.first['datetime']))
+            .toString();
+  }
+
+  ///save current data alarm
+  ///
+  @override
+  void saveDataAlarm(DateTime? datetime) async {
+    try {
+      await ServiceLocalStorage().saveDataAlarm({
+        'datetime': datetime.toString(),
+      });
+      getDataAlarm();
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  ///get current data alarm
+  ///
+  @override
+  void getDataAlarm() async {
+    List result = await ServiceLocalStorage().getDataAlarm();
+    dataAlarm.clear();
+
+    int looping = result.length - (result.length % 2);
+    List u = [];
+    for (var i = 0; i < result.length; i++) {
+      u.add(result[i]['datetime']);
+    }
+    debugPrint(u.toString());
+
+    for (var i = 0; i < looping; i = i + 2) {
+      DateTime data1 = DateTime.parse(result[i]['datetime']);
+      DateTime data2 = DateTime.parse(result[i + 1]['datetime']);
+      final difference = data2.difference(data1);
+
+      dataAlarm.add(
+        BarChartGroupData(x: (i / 2 + 1).round(), barRods: [
+          BarChartRodData(
+              y: difference.inSeconds.toDouble(),
+              colors: [const Color(0xff43dde6), const Color(0xff43dde6)]),
+        ]),
+      );
+    }
+    update();
+  }
+
   ///horizontal drag on clock
   ///
   @override
   void horizontalDrag(DragUpdateDetails value) {
     cancelTimer();
-    print('horizontal :' + value.toString());
+    // debugPrint('horizontal :' + value.toString());
     if (value.delta.dx != 0.0) {
-      debugPrint(value.delta.dx.toString());
+      // debugPrint(value.delta.dx.toString());
 
       if (value.delta.dx > 0) {
         ServiceDebounce.call(
@@ -160,10 +257,10 @@ class ClockController extends GetxController
   @override
   void verticalDrag(DragUpdateDetails value) {
     cancelTimer();
-    print('vertical :' + value.toString());
+    // debugPrint('vertical :' + value.toString());
 
     if (value.delta.dy != 0.0) {
-      debugPrint(value.delta.dy.toString());
+      // debugPrint(value.delta.dy.toString());
 
       if (value.delta.dy > 0) {
         ServiceDebounce.call(function: () async {
@@ -199,19 +296,51 @@ class ClockController extends GetxController
     }
   }
 
+  ///remove alarm
+  ///
+  @override
+  void removeAlarm() async {
+    try {
+      AndroidAlarmManager.cancel(1);
+      ServiceLocalStorage().removeAlarm();
+      ServiceLocalStorage().removeLastDataAlarm();
+      currentAlarmValue.value = await getCurrentAlarm();
+      getDataAlarm();
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
   ///create alarm
   ///
   @override
   void createAlarm() async {
-    var test = DateFormat("dd/MM/yyyy HH:mm:ss").parse(
-        "${dateTime.value.day}/${dateTime.value.month}/${dateTime.value.year} 00:15:00");
+    saveCurrentAlarm('Ini alarm gua', 'iya ini', const Duration(seconds: 0),
+        alarmDateTime.value);
+    alarmDateTime.value = DateTime(
+        dateTime.value.year,
+        dateTime.value.month,
+        dateTime.value.day,
+        alarmDateTime.value.hour,
+        alarmDateTime.value.minute,
+        0,
+        0,
+        0);
+    saveDataAlarm(alarmDateTime.value);
 
+    currentAlarmValue.value = await getCurrentAlarm();
+    setAlarm(alarmDateTime.value);
+  }
+
+  ///set alarm
+  ///
+  static setAlarm(DateTime datetime) async {
     await AndroidAlarmManager.periodic(
       const Duration(seconds: 10),
       1,
       callbackAlarm,
-      // startAt: DateTime.now().add(const Duration(seconds: 5)),
-      // startAt: test,
+      startAt: DateFormat("dd/MM/yyyy HH:mm:ss").parse(
+          "${datetime.day}/${datetime.month}/${datetime.year} ${datetime.hour}:${datetime.minute}:00"),
       exact: true,
       wakeup: true,
     );
@@ -220,15 +349,13 @@ class ClockController extends GetxController
   ///callback alarm
   ///
   static Future<void> callbackAlarm() async {
-    print('Alarm fired!');
-
     RingtonePlayer.play(
       android: Android.alarm,
       ios: Ios.electronic,
       volume: 0.5,
     );
     AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
-      if (!isAllowed) {
+      if (isAllowed == false) {
         AwesomeNotifications().requestPermissionToSendNotifications();
       } else {
         AwesomeNotifications().createNotification(
@@ -237,10 +364,44 @@ class ClockController extends GetxController
                 channelKey: 'basic_channel',
                 title: 'Simple Notification',
                 body: 'Simple body'),
-            actionButtons: [NotificationActionButton(key: '1', label: 'Oke')]);
+            actionButtons: []);
       }
     });
+    await Future.delayed(const Duration(seconds: 2));
+    RingtonePlayer.stop();
     uiSendPort ??= IsolateNameServer.lookupPortByName(isolateName);
     uiSendPort?.send(null);
+  }
+
+  ///view of graph
+  ///
+  @override
+  Widget viewGraph() {
+    return Obx(() {
+      debugPrint(dataAlarm.toList().toString());
+      return BarChart(BarChartData(
+        titlesData: FlTitlesData(
+          bottomTitles: SideTitles(
+            showTitles: true,
+            getTitles: (value) {
+              return '${value.toInt()}';
+            },
+          ),
+          rightTitles: SideTitles(
+            interval: 5,
+            showTitles: false,
+          ),
+          leftTitles: SideTitles(
+            interval: 10,
+            showTitles: true,
+          ),
+        ),
+        borderData:
+            FlBorderData(border: Border.all(color: Colors.white, width: 0.5)),
+        alignment: BarChartAlignment.spaceEvenly,
+        maxY: 50,
+        barGroups: dataAlarm,
+      ));
+    });
   }
 }

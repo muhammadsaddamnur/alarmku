@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class Score {
   late double? value;
-  late DateTime? time;
+  late String? time;
   Score({this.value, this.time});
 }
 
-const WeekDays = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+// const WeekDays = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 class WidgetChart extends StatefulWidget {
   final List<Score>? scores;
@@ -26,28 +27,27 @@ class _WidgetChartState extends State<WidgetChart> {
     super.initState();
     var min = double.maxFinite;
     var max = -double.maxFinite;
-    widget.scores!.forEach((p) {
+    for (var p in widget.scores!) {
       min = (min > p.value! ? p.value : min)!;
       max = (max < p.value! ? p.value : max)!;
-    });
+    }
 
     setState(() {
       _min = min;
       _max = max;
       _y = widget.scores!.map((p) => p.value!.toDouble()).toList();
-      _x = widget.scores!
-          .map((p) => "${WeekDays[p.time!.weekday]}\n${p.time!.day}")
-          .toList();
+      // _x = widget.scores!
+      //     .map((p) => "${WeekDays[p.time!.weekday]}\n${p.time!.day}")
+      //     .toList();
+      _x = widget.scores!.map((p) => "${p.time}").toList();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: CustomPaint(
-        child: Container(),
-        painter: ChartPainter(_x, _y, _min, _max),
-      ),
+    return CustomPaint(
+      child: Container(),
+      painter: ChartPainter(_x, _y, _min, _max),
     );
   }
 }
@@ -61,16 +61,19 @@ class ChartPainter extends CustomPainter {
 
   ChartPainter(this.x, this.y, this.min, this.max);
 
-  final Color backgroundColor = Colors.black;
+  final Color backgroundColor = Get.theme.colorScheme.primary;
 
   final linePaint = Paint()
-    ..color = Colors.white
+    ..color = Get.theme.colorScheme.primary
     ..style = PaintingStyle.stroke
     ..strokeWidth = 1;
 
-  final yLabelStyle = TextStyle(color: Colors.white, fontSize: 14);
-  final xLabelStyle =
-      TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold);
+  final yLabelStyle =
+      TextStyle(color: Get.theme.colorScheme.primary, fontSize: 14);
+  final xLabelStyle = TextStyle(
+      color: Get.theme.colorScheme.primary,
+      fontSize: 14,
+      fontWeight: FontWeight.bold);
 
   static double border = 10.0;
   static double radius = 5;
@@ -84,12 +87,12 @@ class ChartPainter extends CustomPainter {
 
     final clipRect = Rect.fromLTWH(0, 0, size.width, size.height);
     canvas.clipRect(clipRect);
-    canvas.drawPaint(Paint()..color = Colors.black);
+    canvas.drawPaint(Paint()..color = Colors.white);
 
     final drawableHeight = size.height - 2.0 * border;
     final drawableWidth = size.width - 2.0 * border;
     final hd = drawableHeight / 5;
-    final wd = drawableWidth / this.x.length;
+    final wd = drawableWidth / x.length;
 
     final height = hd * 3.0;
     final width = drawableWidth;
@@ -122,29 +125,29 @@ class ChartPainter extends CustomPainter {
   }
 
   void _drawXLabels(Canvas canvas, Offset c, double wd) {
-    x.forEach((xp) {
+    for (var xp in x) {
       drawTextCentered(canvas, c, xp, xLabelStyle, wd);
       c += Offset(wd, 0);
-    });
+    }
   }
 
   void _drawYLabels(Canvas canvas, List<String> labels, List<Offset> points,
       double wd, double top) {
     var i = 0;
-    labels.forEach((label) {
+    for (var label in labels) {
       final dp = points[i];
       final dy = (dp.dy - 15) < top ? 15.0 : -15.0;
       final ly = dp + Offset(0, dy);
       drawTextCentered(canvas, ly, label, yLabelStyle, wd);
       i++;
-    });
+    }
   }
 
   void _drawDataPoint(Canvas canvas, List<Offset> points, Paint dotPaintFill) {
-    points.forEach((dp) {
+    for (var dp in points) {
       canvas.drawCircle(dp, radius, dotPaintFill);
       canvas.drawCircle(dp, radius, linePaint);
-    });
+    }
   }
 
   _computePath(List<Offset> points) {
@@ -163,12 +166,12 @@ class ChartPainter extends CustomPainter {
   List<Offset> _computePoints(
       Offset c, double width, double height, double hr) {
     List<Offset> points = [];
-    y.forEach((yp) {
+    for (var yp in y) {
       final yy = height - (yp - min) * hr;
       final dp = Offset(c.dx, c.dy - height / 2 + yy);
       points.add(dp);
       c += Offset(width, 0);
-    });
+    }
     return points;
   }
 
@@ -180,18 +183,18 @@ class ChartPainter extends CustomPainter {
   final Paint outlinePaint = Paint()
     ..strokeWidth = 1
     ..style = PaintingStyle.stroke
-    ..color = Colors.white;
+    ..color = Get.theme.colorScheme.primary;
 
-  void _drawOutline(Canvas canvas, Offset c, double width, double height) {
-    y.forEach((p) {
-      final rect = Rect.fromCenter(center: c, width: width, height: height);
-      canvas.drawRect(rect, outlinePaint);
-      c += Offset(width, 0);
-    });
-  }
+  // void _drawOutline(Canvas canvas, Offset c, double width, double height) {
+  //   for (var p in y) {
+  //     final rect = Rect.fromCenter(center: c, width: width, height: height);
+  //     canvas.drawRect(rect, outlinePaint);
+  //     c += Offset(width, 0);
+  //   }
+  // }
 
   List<String> _computeLabel() {
-    return y.map((yp) => "${yp.toStringAsFixed(1)}").toList();
+    return y.map((yp) => yp.toStringAsFixed(1)).toList();
   }
 
   measureText(String s, TextStyle style, double maxWidth, TextAlign align) {
@@ -202,7 +205,7 @@ class ChartPainter extends CustomPainter {
     return tp;
   }
 
-  void drawTextCentered(
+  drawTextCentered(
       Canvas canvas, Offset c, String text, TextStyle style, double maxWidth) {
     final tp = measureText(text, style, maxWidth, TextAlign.center);
     final offset = c + Offset(-tp.width / 2, -tp.height / 2);

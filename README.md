@@ -1,16 +1,6 @@
-# alarmku
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. update flutter ke 2.5.2
+2. download semua package (flutter pub get)
+3. running
+4. tap dua kali untuk buat alarm, jika sudah ada scedule sebelumnyya hapus terlebih dahulu
+5. swipe up/swipe down pada jam untuk mengatur jamnya
+6. swipe right/swipe left untuk mengatur menitnya

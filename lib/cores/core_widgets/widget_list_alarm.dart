@@ -2,7 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class WidgetListAlarm extends StatelessWidget {
-  const WidgetListAlarm({Key? key}) : super(key: key);
+  final String? datetime;
+  final Function()? onRemove;
+  const WidgetListAlarm({
+    Key? key,
+    this.datetime,
+    this.onRemove,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +26,7 @@ class WidgetListAlarm extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        '09:09',
+                        '$datetime',
                         textAlign: TextAlign.start,
                         style: TextStyle(
                             fontSize: 40, color: Get.theme.colorScheme.primary),
@@ -29,43 +35,20 @@ class WidgetListAlarm extends StatelessWidget {
                     Row(
                       children: [
                         IconButton(
-                            onPressed: () {},
+                            onPressed: onRemove,
                             icon: Icon(
                               Icons.delete,
                               color: Get.theme.colorScheme.error,
                             )),
-                        Switch(value: false, onChanged: (x) {})
                       ],
                     )
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        'Senin, Selasa, Rabu',
-                        textAlign: TextAlign.start,
-                        style: Get.textTheme.caption,
-                      ),
-                    ),
-                    Flexible(
-                      child: Text(
-                        ' - Catatan',
-                        textAlign: TextAlign.start,
-                        style: TextStyle(
-                            fontSize: Get.textTheme.caption!.fontSize,
-                            color: Get.textTheme.caption!.color,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ),
                   ],
                 ),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(left: 30, right: 30),
+          const Padding(
+            padding: EdgeInsets.only(left: 30, right: 30),
             child: Divider(
               height: 0,
               thickness: 0.5,

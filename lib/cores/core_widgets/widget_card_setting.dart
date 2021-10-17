@@ -4,8 +4,11 @@ import 'package:intl/intl.dart';
 
 class CardOptions {
   DateTime dateTime;
-  void Function()? onTapSave;
-  CardOptions({required this.dateTime, required this.onTapSave});
+  void Function()? onTapSave, onTapCancel;
+  CardOptions(
+      {required this.dateTime,
+      required this.onTapSave,
+      required this.onTapCancel});
 }
 
 class WidgetCardSetting extends StatelessWidget {
@@ -60,56 +63,6 @@ class WidgetCardSetting extends StatelessWidget {
                   ),
                 ],
               ),
-              Divider(
-                height: 50,
-                thickness: 0.5,
-              ),
-              Text(
-                'Ulangi Setiap',
-                style: TextStyle(
-                    fontSize: 14, color: Get.textTheme.caption!.color),
-              ),
-              Wrap(
-                alignment: WrapAlignment.center,
-                children: [
-                  'Senin',
-                  'Selasa',
-                  'Rabu',
-                  'Kamis',
-                  'Jumat',
-                  'Sabtu',
-                  'Minggu',
-                ]
-                    .map((e) => Padding(
-                          padding: const EdgeInsets.only(
-                            right: 3,
-                          ),
-                          child: Chip(
-                            label: Text(
-                              e,
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  color: Get.theme.colorScheme.primary),
-                            ),
-                            backgroundColor: Colors.white,
-                            elevation: 0.5,
-                          ),
-                        ))
-                    .toList(),
-              ),
-              Divider(
-                height: 50,
-                thickness: 0.5,
-              ),
-              TextField(
-                textAlign: TextAlign.center,
-                decoration: InputDecoration(
-                  hintText: 'Tap disini untuk menambah catatan',
-                ),
-              ),
-              SizedBox(
-                height: 30,
-              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -119,10 +72,10 @@ class WidgetCardSetting extends StatelessWidget {
                             backgroundColor: MaterialStateProperty.all(
                                 Get.theme.colorScheme.error),
                             elevation: MaterialStateProperty.all(0)),
-                        onPressed: () {},
-                        child: Text('Batalkan')),
+                        onPressed: cardOptions.onTapCancel,
+                        child: const Text('Batalkan')),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     width: 10,
                   ),
                   Flexible(
@@ -130,7 +83,7 @@ class WidgetCardSetting extends StatelessWidget {
                         style: ButtonStyle(
                             elevation: MaterialStateProperty.all(0)),
                         onPressed: cardOptions.onTapSave,
-                        child: Text('Simpan')),
+                        child: const Text('Simpan')),
                   ),
                 ],
               )
